@@ -5,10 +5,22 @@ Common and useful classes, methods, exceptions etc.
 
 ## Installation
 
+In your `composer.json` add address of repository into `repositories` section:
+
+```json
+"repositories": [
+    (...)
+    {
+        "type": "vcs",
+        "url": "https://github.com/wiosna-dev/common-library"
+    }
+]
+```
+
 Run [Composer](https://getcomposer.org) to install this package in your project:
 
 ```bash
-$ composer require wiosna/common-library
+$ composer require wiosna-dev/common-library
 ```
 
 > How to install Composer: https://getcomposer.org/download
