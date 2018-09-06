@@ -10,14 +10,16 @@ namespace Meritoo\Common\Utilities;
 
 use DateInterval;
 use DateTime;
-use Meritoo\Common\Exception\Date\UnknownDatePartTypeException;
+use Exception;
+use Meritoo\Common\Exception\Type\UnknownDatePartTypeException;
 use Meritoo\Common\Type\DatePartType;
+use Meritoo\Common\Type\DatePeriod;
 
 /**
  * Useful date methods
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class Date
 {
@@ -66,97 +68,110 @@ class Date
      * The dates are returned in an array with indexes 'start' and 'end'.
      *
      * @param int $period The period, type of period. One of DatePeriod class constants, e.g. DatePeriod::LAST_WEEK.
-     * @return DatePeriod
+     * @throws Exception
+     * @return null|DatePeriod
      */
     public static function getDatesForPeriod($period)
     {
-        $datePeriod = null;
-
-        if (DatePeriod::isCorrectPeriod($period)) {
-            $dateStart = null;
-            $dateEnd = null;
-
-            switch ($period) {
-                case DatePeriod::LAST_WEEK:
-                    $thisWeekStart = new DateTime('this week');
-
-                    $dateStart = clone $thisWeekStart;
-                    $dateEnd = clone $thisWeekStart;
-
-                    $dateStart->sub(new DateInterval('P7D'));
-                    $dateEnd->sub(new DateInterval('P1D'));
-
-                    break;
-                case DatePeriod::THIS_WEEK:
-                    $dateStart = new DateTime('this week');
-
-                    $dateEnd = clone $dateStart;
-                    $dateEnd->add(new DateInterval('P6D'));
-
-                    break;
-                case DatePeriod::NEXT_WEEK:
-                    $dateStart = new DateTime('this week');
-                    $dateStart->add(new DateInterval('P7D'));
-
-                    $dateEnd = clone $dateStart;
-                    $dateEnd->add(new DateInterval('P6D'));
-
-                    break;
-                case DatePeriod::LAST_MONTH:
-                    $dateStart = new DateTime('first day of last month');
-                    $dateEnd = new DateTime('last day of last month');
-
-                    break;
-                case DatePeriod::THIS_MONTH:
-                    $lastMonth = self::getDatesForPeriod(DatePeriod::LAST_MONTH);
-                    $nextMonth = self::getDatesForPeriod(DatePeriod::NEXT_MONTH);
-
-                    $dateStart = $lastMonth->getEndDate();
-                    $dateStart->add(new DateInterval('P1D'));
-
-                    $dateEnd = $nextMonth->getStartDate();
-                    $dateEnd->sub(new DateInterval('P1D'));
-
-                    break;
-                case DatePeriod::NEXT_MONTH:
-                    $dateStart = new DateTime('first day of next month');
-                    $dateEnd = new DateTime('last day of next month');
-
-                    break;
-                case DatePeriod::LAST_YEAR:
-                case DatePeriod::THIS_YEAR:
-                case DatePeriod::NEXT_YEAR:
-                    $dateStart = new DateTime();
-                    $dateEnd = new DateTime();
-
-                    if (DatePeriod::LAST_YEAR == $period || DatePeriod::NEXT_YEAR == $period) {
-                        $yearDifference = 1;
-
-                        if (DatePeriod::LAST_YEAR == $period) {
-                            $yearDifference *= -1;
-                        }
-
-                        $modifyString = sprintf('%s year', $yearDifference);
-                        $dateStart->modify($modifyString);
-                        $dateEnd->modify($modifyString);
-                    }
-
-                    $year = $dateStart->format('Y');
-                    $dateStart->setDate($year, 1, 1);
-                    $dateEnd->setDate($year, 12, 31);
-
-                    break;
-            }
-
-            if (null !== $dateStart && null !== $dateEnd) {
-                $dateStart->setTime(0, 0, 0);
-                $dateEnd->setTime(23, 59, 59);
-
-                $datePeriod = new DatePeriod($dateStart, $dateEnd);
-            }
+        /*
+         * Type of period is incorrect?
+         * Nothing to do
+         */
+        if (!(new DatePeriod())->isCorrectType($period)) {
+            return null;
         }
 
-        return $datePeriod;
+        $dateStart = null;
+        $dateEnd = null;
+
+        switch ($period) {
+            case DatePeriod::LAST_WEEK:
+                $thisWeekStart = new DateTime('this week');
+
+                $dateStart = clone $thisWeekStart;
+                $dateEnd = clone $thisWeekStart;
+
+                $dateStart->sub(new DateInterval('P7D'));
+                $dateEnd->sub(new DateInterval('P1D'));
+
+                break;
+            case DatePeriod::THIS_WEEK:
+                $dateStart = new DateTime('this week');
+
+                $dateEnd = clone $dateStart;
+                $dateEnd->add(new DateInterval('P6D'));
+
+                break;
+            case DatePeriod::NEXT_WEEK:
+                $dateStart = new DateTime('this week');
+                $dateStart->add(new DateInterval('P7D'));
+
+                $dateEnd = clone $dateStart;
+                $dateEnd->add(new DateInterval('P6D'));
+
+                break;
+            case DatePeriod::LAST_MONTH:
+                $dateStart = new DateTime('first day of last month');
+                $dateEnd = new DateTime('last day of last month');
+
+                break;
+            case DatePeriod::THIS_MONTH:
+                $lastMonth = self::getDatesForPeriod(DatePeriod::LAST_MONTH);
+                $nextMonth = self::getDatesForPeriod(DatePeriod::NEXT_MONTH);
+
+                if (null !== $lastMonth) {
+                    $dateStart = $lastMonth->getEndDate();
+                    $dateStart->add(new DateInterval('P1D'));
+                }
+
+                if (null !== $nextMonth) {
+                    $dateEnd = $nextMonth->getStartDate();
+                    $dateEnd->sub(new DateInterval('P1D'));
+                }
+
+                break;
+            case DatePeriod::NEXT_MONTH:
+                $dateStart = new DateTime('first day of next month');
+                $dateEnd = new DateTime('last day of next month');
+
+                break;
+            case DatePeriod::LAST_YEAR:
+            case DatePeriod::THIS_YEAR:
+            case DatePeriod::NEXT_YEAR:
+                $dateStart = new DateTime();
+                $dateEnd = new DateTime();
+
+                if (DatePeriod::LAST_YEAR === $period || DatePeriod::NEXT_YEAR === $period) {
+                    $yearDifference = 1;
+
+                    if (DatePeriod::LAST_YEAR === $period) {
+                        $yearDifference *= -1;
+                    }
+
+                    $modifyString = sprintf('%s year', $yearDifference);
+                    $dateStart->modify($modifyString);
+                    $dateEnd->modify($modifyString);
+                }
+
+                $year = $dateStart->format('Y');
+                $dateStart->setDate($year, 1, 1);
+                $dateEnd->setDate($year, 12, 31);
+
+                break;
+        }
+
+        /*
+         * Start or end date is unknown?
+         * Nothing to do
+         */
+        if (null === $dateStart || null === $dateEnd) {
+            return null;
+        }
+
+        $dateStart->setTime(0, 0, 0);
+        $dateEnd->setTime(23, 59, 59);
+
+        return new DatePeriod($dateStart, $dateEnd);
     }
 
     /**
@@ -230,8 +245,8 @@ class Date
      * @param int $month The month value
      * @param int $day   The day value
      *
-     * @return int
      * @throws UnknownDatePartTypeException
+     * @return int
      */
     public static function getDayOfWeek($year, $month, $day)
     {
@@ -243,21 +258,21 @@ class Date
          * Oops, incorrect year
          */
         if ($year <= 0) {
-            throw new UnknownDatePartTypeException(DatePartType::YEAR, $year);
+            throw UnknownDatePartTypeException::createException(DatePartType::YEAR, $year);
         }
 
         /*
          * Oops, incorrect month
          */
         if ($month < 1 || $month > 12) {
-            throw new UnknownDatePartTypeException(DatePartType::MONTH, $month);
+            throw UnknownDatePartTypeException::createException(DatePartType::MONTH, $month);
         }
 
         /*
          * Oops, incorrect day
          */
         if ($day < 1 || $day > 31) {
-            throw new UnknownDatePartTypeException(DatePartType::DAY, $day);
+            throw UnknownDatePartTypeException::createException(DatePartType::DAY, $day);
         }
 
         if ($month < 3) {
@@ -356,11 +371,11 @@ class Date
             return null;
         }
 
-        $dateStart = self::getDateTime($dateStart, true);
-        $dateEnd = self::getDateTime($dateEnd, true);
+        $start = self::getDateTime($dateStart, true);
+        $end = self::getDateTime($dateEnd, true);
 
         $difference = [];
-        $dateDiff = $dateEnd->getTimestamp() - $dateStart->getTimestamp();
+        $dateDiff = $end->getTimestamp() - $start->getTimestamp();
 
         $daysInSeconds = 0;
         $hoursInSeconds = 0;
@@ -378,39 +393,39 @@ class Date
             self::DATE_DIFFERENCE_UNIT_MINUTES,
         ];
 
-        if (null === $differenceUnit || self::DATE_DIFFERENCE_UNIT_YEARS == $differenceUnit) {
-            $diff = $dateEnd->diff($dateStart);
+        if (null === $differenceUnit || self::DATE_DIFFERENCE_UNIT_YEARS === $differenceUnit) {
+            $diff = $end->diff($start);
 
             /*
              * Difference between dates in years should be returned only?
              */
-            if (self::DATE_DIFFERENCE_UNIT_YEARS == $differenceUnit) {
+            if (self::DATE_DIFFERENCE_UNIT_YEARS === $differenceUnit) {
                 return $diff->y;
             }
 
             $difference[self::DATE_DIFFERENCE_UNIT_YEARS] = $diff->y;
         }
 
-        if (null === $differenceUnit || self::DATE_DIFFERENCE_UNIT_MONTHS == $differenceUnit) {
-            $diff = $dateEnd->diff($dateStart);
+        if (null === $differenceUnit || self::DATE_DIFFERENCE_UNIT_MONTHS === $differenceUnit) {
+            $diff = $end->diff($start);
 
             /*
              * Difference between dates in months should be returned only?
              */
-            if (self::DATE_DIFFERENCE_UNIT_MONTHS == $differenceUnit) {
+            if (self::DATE_DIFFERENCE_UNIT_MONTHS === $differenceUnit) {
                 return $diff->m;
             }
 
             $difference[self::DATE_DIFFERENCE_UNIT_MONTHS] = $diff->m;
         }
 
-        if (null === $differenceUnit || in_array($differenceUnit, $relatedUnits)) {
+        if (null === $differenceUnit || in_array($differenceUnit, $relatedUnits, true)) {
             $days = (int)floor($dateDiff / $daySeconds);
 
             /*
              * Difference between dates in days should be returned only?
              */
-            if (self::DATE_DIFFERENCE_UNIT_DAYS == $differenceUnit) {
+            if (self::DATE_DIFFERENCE_UNIT_DAYS === $differenceUnit) {
                 return $days;
             }
 
@@ -427,13 +442,13 @@ class Date
             $daysInSeconds = $days * $daySeconds;
         }
 
-        if (null === $differenceUnit || in_array($differenceUnit, $relatedUnits)) {
+        if (null === $differenceUnit || in_array($differenceUnit, $relatedUnits, true)) {
             $hours = (int)floor(($dateDiff - $daysInSeconds) / $hourSeconds);
 
             /*
              * Difference between dates in hours should be returned only?
              */
-            if (self::DATE_DIFFERENCE_UNIT_HOURS == $differenceUnit) {
+            if (self::DATE_DIFFERENCE_UNIT_HOURS === $differenceUnit) {
                 return $hours;
             }
 
@@ -450,13 +465,13 @@ class Date
             $hoursInSeconds = $hours * $hourSeconds;
         }
 
-        if (null === $differenceUnit || self::DATE_DIFFERENCE_UNIT_MINUTES == $differenceUnit) {
+        if (null === $differenceUnit || self::DATE_DIFFERENCE_UNIT_MINUTES === $differenceUnit) {
             $minutes = (int)floor(($dateDiff - $daysInSeconds - $hoursInSeconds) / 60);
 
             /*
              * Difference between dates in minutes should be returned only?
              */
-            if (self::DATE_DIFFERENCE_UNIT_MINUTES == $differenceUnit) {
+            if (self::DATE_DIFFERENCE_UNIT_MINUTES === $differenceUnit) {
                 return $minutes;
             }
 
@@ -475,6 +490,7 @@ class Date
      * @param string   $intervalTemplate (optional) Template used to build date interval. It should contain "%d" as the
      *                                   placeholder which is replaced with a number that represents each iteration.
      *                                   Default: interval for days.
+     * @throws Exception
      * @return array
      */
     public static function getDatesCollection(DateTime $startDate, $datesCount, $intervalTemplate = 'P%dD')
@@ -520,6 +536,7 @@ class Date
      * @param int      $end              (optional) End of random partition
      * @param string   $intervalTemplate (optional) Template used to build date interval. The placeholder is replaced
      *                                   with next, iterated value.
+     * @throws Exception
      * @return DateTime
      */
     public static function getRandomDate(DateTime $startDate = null, $start = 1, $end = 100, $intervalTemplate = 'P%sD')
@@ -540,7 +557,7 @@ class Date
         }
 
         $randomDate = clone $startDate;
-        $randomInterval = new DateInterval(sprintf($intervalTemplate, rand($start, $end)));
+        $randomInterval = new DateInterval(sprintf($intervalTemplate, mt_rand($start, $end)));
 
         return $randomDate->add($randomInterval);
     }
@@ -623,7 +640,7 @@ class Date
                          * So, I have to refuse those special compound formats if they are not explicitly declared as
                          * compound (2nd argument of this method, set to false by default)
                          */
-                        if (in_array($value, $specialFormats)) {
+                        if (in_array($value, $specialFormats, true)) {
                             return false;
                         }
                     }
@@ -648,7 +665,7 @@ class Date
              */
             $dateString = (new DateTime())->format($value);
 
-            if ($dateString != $value) {
+            if ($dateString !== (string)$value) {
                 return new DateTime($dateString);
             }
         } catch (\Exception $exception) {
@@ -692,7 +709,7 @@ class Date
          * Formatted date it's the format who is validated?
          * The format is invalid
          */
-        if ($formatted == $format) {
+        if ($formatted === $format) {
             return false;
         }
 

@@ -11,8 +11,8 @@ namespace Meritoo\Common\Utilities;
 /**
  * Useful methods for mime types of files
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class MimeTypes
 {
@@ -759,9 +759,8 @@ class MimeTypes
      * Returns mime type of given file
      *
      * @param string $filePath Path of the file to check
-     * @return string
-     *
      * @throws \RuntimeException
+     * @return string
      */
     public static function getMimeType($filePath)
     {

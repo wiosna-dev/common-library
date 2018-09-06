@@ -10,6 +10,7 @@ namespace Meritoo\Common\Utilities;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\OptimisticLockException;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\Query\Parameter;
 use Doctrine\ORM\QueryBuilder;
@@ -17,8 +18,8 @@ use Doctrine\ORM\QueryBuilder;
 /**
  * Useful methods for query builder (the Doctrine's QueryBuilder class)
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class QueryBuilderUtility
 {
@@ -33,6 +34,10 @@ class QueryBuilderUtility
     {
         $aliases = $queryBuilder->getRootAliases();
 
+        /*
+         * No aliases?
+         * Nothing to do
+         */
         if (empty($aliases)) {
             return null;
         }
@@ -42,7 +47,8 @@ class QueryBuilderUtility
 
     /**
      * Returns alias of given property joined in given query builder
-     * If the join does not exist, null is returned.
+     *
+     * If there are no joins or the join does not exist, null is returned.
      * It's also information if given property is already joined in given query builder.
      *
      * @param QueryBuilder $queryBuilder The query builder to verify
@@ -53,6 +59,10 @@ class QueryBuilderUtility
     {
         $joins = $queryBuilder->getDQLPart('join');
 
+        /*
+         * No joins?
+         * Nothing to do
+         */
         if (empty($joins)) {
             return null;
         }
@@ -99,33 +109,43 @@ class QueryBuilderUtility
      */
     public static function setCriteria(QueryBuilder $queryBuilder, array $criteria = [], $alias = '')
     {
-        if (!empty($criteria)) {
-            if (empty($alias)) {
-                $alias = self::getRootAlias($queryBuilder);
-            }
+        /*
+         * No criteria used in WHERE clause?
+         * Nothing to do
+         */
+        if (empty($criteria)) {
+            return $queryBuilder;
+        }
 
-            foreach ($criteria as $column => $value) {
-                $compareOperator = '=';
+        /*
+         * No alias provided?
+         * Let's use root alias
+         */
+        if (empty($alias)) {
+            $alias = self::getRootAlias($queryBuilder);
+        }
 
-                if (is_array($value) && !empty($value)) {
-                    if (2 == count($value)) {
-                        $compareOperator = $value[1];
-                    }
+        foreach ($criteria as $column => $value) {
+            $compareOperator = '=';
 
-                    $value = $value[0];
+            if (is_array($value) && !empty($value)) {
+                if (2 == count($value)) {
+                    $compareOperator = $value[1];
                 }
 
-                $predicate = sprintf('%s.%s %s :%s', $alias, $column, $compareOperator, $column);
-
-                if (null === $value) {
-                    $predicate = $queryBuilder->expr()->isNull(sprintf('%s.%s', $alias, $column));
-                    unset($criteria[$column]);
-                } else {
-                    $queryBuilder->setParameter($column, $value);
-                }
-
-                $queryBuilder = $queryBuilder->andWhere($predicate);
+                $value = $value[0];
             }
+
+            $predicate = sprintf('%s.%s %s :%s', $alias, $column, $compareOperator, $column);
+
+            if (null === $value) {
+                $predicate = $queryBuilder->expr()->isNull(sprintf('%s.%s', $alias, $column));
+                unset($criteria[$column]);
+            } else {
+                $queryBuilder->setParameter($column, $value);
+            }
+
+            $queryBuilder = $queryBuilder->andWhere($predicate);
         }
 
         return $queryBuilder;
@@ -136,14 +156,15 @@ class QueryBuilderUtility
      *
      * @param EntityManager         $entityManager The entity manager
      * @param array|ArrayCollection $entities      The entities to delete
-     * @param bool                  $flushDeleted  (optional) If is set to true, flushes the deleted objects.
-     *                                             Otherwise - not.
+     * @param bool                  $flushDeleted  (optional) If is set to true, flushes the deleted objects (default
+     *                                             behaviour). Otherwise - not.
+     * @throws OptimisticLockException
      * @return bool
      */
     public static function deleteEntities(EntityManager $entityManager, $entities, $flushDeleted = true)
     {
         /*
-         * No entities found?
+         * No entities provided?
          * Nothing to do
          */
         if (empty($entities)) {
@@ -169,24 +190,30 @@ class QueryBuilderUtility
      * Attention. Existing parameters will be overridden.
      *
      * @param QueryBuilder          $queryBuilder The query builder
-     * @param array|ArrayCollection $parameters   Parameters to add. Collection of instances of
-     *                                            Doctrine\ORM\Query\Parameter class or an array with key-value pairs.
+     * @param array|ArrayCollection $parameters   Parameters to add. Collection of Doctrine\ORM\Query\Parameter
+     *                                            instances or an array with key-value pairs.
      * @return QueryBuilder
      */
     public static function addParameters(QueryBuilder $queryBuilder, $parameters)
     {
-        if (!empty($parameters)) {
-            foreach ($parameters as $key => $parameter) {
-                $name = $key;
-                $value = $parameter;
+        /*
+         * No parameters?
+         * Nothing to do
+         */
+        if (empty($parameters)) {
+            return $queryBuilder;
+        }
 
-                if ($parameter instanceof Parameter) {
-                    $name = $parameter->getName();
-                    $value = $parameter->getValue();
-                }
+        foreach ($parameters as $key => $parameter) {
+            $name = $key;
+            $value = $parameter;
 
-                $queryBuilder->setParameter($name, $value);
+            if ($parameter instanceof Parameter) {
+                $name = $parameter->getName();
+                $value = $parameter->getValue();
             }
+
+            $queryBuilder->setParameter($name, $value);
         }
 
         return $queryBuilder;

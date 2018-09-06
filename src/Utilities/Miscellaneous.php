@@ -9,14 +9,13 @@
 namespace Meritoo\Common\Utilities;
 
 use Gedmo\Sluggable\Util\Urlizer;
-use Symfony\Component\HttpFoundation\Cookie;
 use Transliterator;
 
 /**
  * Miscellaneous methods (only static functions)
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class Miscellaneous
 {
@@ -61,15 +60,15 @@ class Miscellaneous
             $startFileName = mb_substr($startFileName, 1);
         }
 
-        $directoryContent = scandir($directoryPath);
+        $directoryContent = scandir($directoryPath, SCANDIR_SORT_ASCENDING);
 
         if (!empty($directoryContent)) {
             foreach ($directoryContent as $fileName) {
-                if ('.' != $fileName && '..' != $fileName) {
+                if ('.' !== $fileName && '..' !== $fileName) {
                     $content = null;
 
                     if (!empty($startFileName) && !$startFileFound) {
-                        if ($fileName == $startFileName) {
+                        if ($fileName === $startFileName) {
                             $startFileFound = true;
                         }
 
@@ -83,18 +82,18 @@ class Miscellaneous
                     if (null !== $content) {
                         $files[$fileName] = $content;
 
-                        if (!empty($maxFilesCount)) {
+                        if (null !== $maxFilesCount) {
                             $count += Arrays::getNonArrayElementsCount($content);
                         }
                     } else {
                         $files[] = $fileName;
 
-                        if (!empty($maxFilesCount)) {
+                        if (null !== $maxFilesCount) {
                             ++$count;
                         }
                     }
 
-                    if (!empty($maxFilesCount) && $count >= $maxFilesCount) {
+                    if (null !== $maxFilesCount && $count >= $maxFilesCount) {
                         break;
                     }
                 }
@@ -159,11 +158,17 @@ class Miscellaneous
      */
     public static function includeFileExtension($fileName, $extension)
     {
-        if (self::getFileExtension($fileName, true) != strtolower($extension)) {
-            return sprintf('%s.%s', $fileName, $extension);
+        $fileExtension = self::getFileExtension($fileName, true);
+
+        /*
+         * File has given extension?
+         * Nothing to do
+         */
+        if ($fileExtension === strtolower($extension)) {
+            return $fileName;
         }
 
-        return $fileName;
+        return sprintf('%s.%s', $fileName, $extension);
     }
 
     /**
@@ -228,31 +233,28 @@ class Miscellaneous
         /*
          * Let's clear name of file
          *
-         * Attention. The name without extension may be cleared / urlized only
-         * to avoid incorrect name by replacing "." with "-".
+         * Attention.
+         * The name without extension may be cleared / urlized only to avoid incorrect name by replacing "." with "-".
          */
         $withoutExtension = Urlizer::urlize($withoutExtension);
 
         /*
          * Now I have to complete the template used to build / generate unique name
          */
-        $template = '%s-%s'; // file's name and unique key
-
-        if ($objectId > 0) {
-            $template .= '-%s'; // object ID
-        }
-
-        $template .= '.%s'; // file's extension
+        $template = '%s-%s.%s'; // [file's name]-[unique key].[file's extension]
 
         /*
          * Add some uniqueness
          */
-        $unique = uniqid(mt_rand(), true);
+        $unique = self::getUniqueString(mt_rand());
 
         /*
          * Finally build and return the unique name
          */
+
         if ($objectId > 0) {
+            $template = '%s-%s-%s.%s'; // [file's name]-[unique key]-[object ID].[file's extension]
+
             return sprintf($template, $withoutExtension, $unique, $objectId, $extension);
         }
 
@@ -332,7 +334,7 @@ class Miscellaneous
     {
         $phpModulesArray = get_loaded_extensions();
 
-        return in_array($phpModuleName, $phpModulesArray);
+        return in_array($phpModuleName, $phpModulesArray, false);
     }
 
     /**
@@ -460,7 +462,7 @@ class Miscellaneous
          * Value to find is neither a string nor an array OR it's an empty string?
          * Nothing to do
          */
-        if ((!$searchIsString && !$searchIsArray) || ($searchIsString && 0 == strlen($search))) {
+        if ((!$searchIsString && !$searchIsArray) || ($searchIsString && '' === $search)) {
             return $effect;
         }
 
@@ -485,7 +487,7 @@ class Miscellaneous
          * Second step: replace with regular expressions.
          * Attention. Searched and replacement value should be the same type: strings or arrays.
          */
-        if ($effect == $subject && ($bothAreStrings || $bothAreArrays)) {
+        if ($effect === $subject && ($bothAreStrings || $bothAreArrays)) {
             if ($quoteStrings && $replacementIsString) {
                 $replacement = '\'' . $replacement . '\'';
             }
@@ -503,7 +505,7 @@ class Miscellaneous
          * Third step: complex replace of the replacement defined as an array.
          * It may be useful when you want to search for a one string and replace the string with multiple values.
          */
-        if ($effect == $subject && $searchIsString && $replacementIsArray) {
+        if ($effect === $subject && $searchIsString && $replacementIsArray) {
             $subjectIsArray = is_array($subject);
             $effect = '';
 
@@ -588,7 +590,12 @@ class Miscellaneous
      */
     public static function getOperatingSystemNameServer()
     {
-        return php_uname('s');
+        return PHP_OS;
+
+        /*
+         * Previous version:
+         * return php_uname('s');
+         */
     }
 
     /**
@@ -626,10 +633,10 @@ class Miscellaneous
      * Breaks long text
      *
      * @param string $text                   The text to check and break
-     * @param int    $perLine                (optional) Characters count per line
-     * @param string $separator              (optional) Separator that is placed beetwen lines
-     * @param string $encoding               (optional) Character encoding. Used by mb_substr().
-     * @param int    $proportionalAberration (optional) Proportional aberration for chars (percent value)
+     * @param int    $perLine                (optional) Characters count per line. Default: 100.
+     * @param string $separator              (optional) Separator that is placed between lines. Default: "<br>".
+     * @param string $encoding               (optional) Character encoding. Used by mb_substr(). Default: "UTF-8".
+     * @param int    $proportionalAberration (optional) Proportional aberration for chars (percent value). Default: 20.
      * @return string
      */
     public static function breakLongText(
@@ -680,7 +687,8 @@ class Miscellaneous
 
                     $spacePosition = mb_strrpos($lineWithAberration, ' ', 0, $encoding);
 
-                    if ($spacePosition > 0) {
+                    if (false !== $spacePosition && 0 < $spacePosition) {
+                        /* @var int $spacePosition */
                         $perLine = $spacePosition;
                         $insertSeparator = true;
                     }
@@ -716,21 +724,29 @@ class Miscellaneous
      *
      * @param string $directoryPath Directory path
      * @param bool   $contentOnly   (optional) If is set to true, only content of the directory is removed, not
-     *                              directory. Otherwise - directory is removed too.
-     * @return bool
+     *                              directory itself. Otherwise - directory is removed too (default behaviour).
+     * @return bool|null
      */
     public static function removeDirectory($directoryPath, $contentOnly = false)
     {
+        /*
+         * Directory does not exist?
+         * Nothing to do
+         */
         if (!file_exists($directoryPath)) {
-            return true;
+            return null;
         }
 
+        /*
+         * It's not a directory?
+         * Let's treat it like file
+         */
         if (!is_dir($directoryPath)) {
             return unlink($directoryPath);
         }
 
-        foreach (scandir($directoryPath) as $item) {
-            if ('.' == $item || '..' == $item) {
+        foreach (scandir($directoryPath, SCANDIR_SORT_ASCENDING) as $item) {
+            if ('.' === $item || '..' === $item) {
                 continue;
             }
 
@@ -739,6 +755,9 @@ class Miscellaneous
             }
         }
 
+        /*
+         * Directory should be removed too?
+         */
         if (!$contentOnly) {
             return rmdir($directoryPath);
         }
@@ -776,7 +795,7 @@ class Miscellaneous
         foreach ($members as $key => $value) {
             $value = mb_strtolower($value);
 
-            if (0 == $key) {
+            if (0 === $key) {
                 $effect .= self::lowercaseFirst($value);
             } else {
                 $effect .= self::uppercaseFirst($value);
@@ -797,10 +816,6 @@ class Miscellaneous
      * - null (default): nothing is done with the string
      * - true: the rest of string is lowercased
      * - false: the rest of string is uppercased
-     *
-     * Some explanation:
-     * Function lcfirst() is available for PHP >= 5.30, so I wrote my own function that lowercases first character of
-     * the string.
      */
     public static function lowercaseFirst($text, $restLowercase = null)
     {
@@ -816,16 +831,7 @@ class Miscellaneous
             $effect = mb_strtoupper($effect);
         }
 
-        if (function_exists('lcfirst')) {
-            $effect = lcfirst($effect);
-        } else {
-            $first = mb_strtolower($effect[0]);
-            $rest = mb_substr($effect, 1);
-
-            $effect = $first . $rest;
-        }
-
-        return $effect;
+        return lcfirst($effect);
     }
 
     /**
@@ -854,16 +860,7 @@ class Miscellaneous
             $effect = mb_strtoupper($effect);
         }
 
-        if (function_exists('ucfirst')) {
-            $effect = ucfirst($effect);
-        } else {
-            $first = mb_strtoupper($effect[0]);
-            $rest = mb_substr($effect, 1);
-
-            $effect = $first . $rest;
-        }
-
-        return $effect;
+        return ucfirst($effect);
     }
 
     /**
@@ -904,9 +901,9 @@ class Miscellaneous
             'TB',
             'PB',
         ];
-        $index = floor(log($sizeInBytes, 1024));
 
-        $size = round($sizeInBytes / pow(1024, $index), 2);
+        $index = floor(log($sizeInBytes, 1024));
+        $size = round($sizeInBytes / (1024 ** $index), 2);
         $unit = $units[(int)$index];
 
         return sprintf('%s %s', $size, $unit);
@@ -1182,146 +1179,10 @@ class Miscellaneous
 
             if (null !== $globalSource && isset($globalSource[$variableName])) {
                 $value = $globalSource[$variableName];
-
-                if (!ini_get('magic_quotes_gpc')) {
-                    $value = addslashes($value);
-                }
             }
         }
 
         return $value;
-    }
-
-    /**
-     * Returns a CURL response with parsed HTTP headers as array with "headers", "cookies" and "content" keys
-     *
-     * The headers and cookies are parsed and returned as an array, and an array of Cookie objects. Returned array looks
-     * like this example:
-     * <code>
-     * [
-     *      'headers' => [
-     *          'Content-Type' => 'text/html; charset=UTF-8',
-     *          ...
-     *      ],
-     *      'cookies' => [
-     *          new Symfony\Component\HttpFoundation\Cookie(),
-     *          new Symfony\Component\HttpFoundation\Cookie(),
-     *          ...
-     *      ],
-     *      'content' => '<html>...</html>'
-     * ]
-     * </code>
-     *
-     * If you want to attach HTTP headers into response content by CURL you need to set "CURLOPT_HEADER" option
-     * to "true". To read exact length of HTTP headers from CURL you can use "curl_getinfo()" function
-     * and read "CURLINFO_HEADER_SIZE" option.
-     *
-     * @param string $response   the full content of response, including HTTP headers
-     * @param int    $headerSize The length of HTTP headers in content
-     * @return array
-     */
-    public static function getCurlResponseWithHeaders($response, $headerSize)
-    {
-        $headerContent = mb_substr($response, 0, $headerSize);
-        $content = mb_substr($response, $headerSize);
-        $headers = [];
-        $cookies = [];
-
-        /*
-         * Let's transform headers content into two arrays: headers and cookies
-         */
-        foreach (explode("\r\n", $headerContent) as $i => $line) {
-            /*
-             * First line is only HTTP status and is unneeded so skip it
-             */
-            if (0 === $i) {
-                continue;
-            }
-
-            if (Regex::contains($line, ':')) {
-                list($key, $value) = explode(': ', $line);
-
-                /*
-                 * If the header is a "set-cookie" let's save it to "cookies" array
-                 */
-                if ('Set-Cookie' === $key) {
-                    $cookieParameters = explode(';', $value);
-
-                    $name = '';
-                    $value = '';
-                    $expire = 0;
-                    $path = '/';
-                    $domain = null;
-                    $secure = false;
-                    $httpOnly = true;
-
-                    foreach ($cookieParameters as $j => $parameter) {
-                        $param = explode('=', $parameter);
-
-                        /*
-                         * First parameter will be always a cookie name and it's value. It is not needed to run
-                         * further actions for them, so save the values and move to next parameter.
-                         */
-                        if (0 === $j) {
-                            $name = trim($param[0]);
-                            $value = trim($param[1]);
-                            continue;
-                        }
-
-                        /*
-                         * Now there would be the rest of cookie parameters, names of params are sent different way so
-                         * I need to lowercase the names and remove unneeded spaces.
-                         */
-                        $paramName = mb_strtolower(trim($param[0]));
-                        $paramValue = true;
-
-                        /*
-                         * Some parameters don't have value e.g. "secure", but the value for them if they're specified
-                         * is "true". Otherwise - just read a value for parameter if exists.
-                         */
-                        if (array_key_exists(1, $param)) {
-                            $paramValue = trim($param[1]);
-                        }
-
-                        switch ($paramName) {
-                            case 'expires':
-                                $expire = $paramValue;
-                                break;
-                            case 'path':
-                                $path = $paramValue;
-                                break;
-                            case 'domain':
-                                $domain = $paramValue;
-                                break;
-                            case 'secure':
-                                $secure = $paramValue;
-                                break;
-                            case 'httponly':
-                                $httpOnly = $paramValue;
-                                break;
-                        }
-                    }
-
-                    /*
-                     * Create new Cookie object and add it to "cookies" array.
-                     * I must skip to next header as cookies shouldn't be saved in "headers" array.
-                     */
-                    $cookies[] = new Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
-                    continue;
-                }
-
-                /*
-                 * Save response header which is not a cookie
-                 */
-                $headers[$key] = $value;
-            }
-        }
-
-        return [
-            'headers' => $headers,
-            'cookies' => $cookies,
-            'content' => $content,
-        ];
     }
 
     /**
@@ -1363,7 +1224,7 @@ class Miscellaneous
                 continue;
             }
 
-            $text = $text . '0';
+            $text .= '0';
         }
 
         return $text;
@@ -1418,8 +1279,8 @@ class Miscellaneous
         if ($asHexadecimal) {
             $hexadecimal = dechex($colorComponent);
 
-            if (1 == strlen($hexadecimal)) {
-                return sprintf('0%s', $hexadecimal, $hexadecimal);
+            if (1 === strlen($hexadecimal)) {
+                return sprintf('0%s', $hexadecimal);
             }
 
             return $hexadecimal;
@@ -1446,14 +1307,14 @@ class Miscellaneous
          * Verify and get valid value of color.
          * An exception will be thrown if the value is not a color.
          */
-        $color = Regex::getValidColorHexValue($color);
+        $validColor = Regex::getValidColorHexValue($color);
 
         /*
          * Grab color's components
          */
-        $red = hexdec(substr($color, 0, 2));
-        $green = hexdec(substr($color, 2, 2));
-        $blue = hexdec(substr($color, 4, 2));
+        $red = hexdec(substr($validColor, 0, 2));
+        $green = hexdec(substr($validColor, 2, 2));
+        $blue = hexdec(substr($validColor, 4, 2));
 
         /*
          * Calculate inverted color's components

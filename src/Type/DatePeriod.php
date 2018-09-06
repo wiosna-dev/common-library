@@ -6,18 +6,20 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Utilities;
+namespace Meritoo\Common\Type;
 
 use DateTime;
+use Meritoo\Common\Type\Base\BaseType;
+use Meritoo\Common\Utilities\Date;
 
 /**
  * A date's period.
  * Contains start and end date of the period.
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
-class DatePeriod
+class DatePeriod extends BaseType
 {
     /**
      * The period constant: last month
@@ -106,17 +108,6 @@ class DatePeriod
     {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
-    }
-
-    /**
-     * Returns information if given period is correct
-     *
-     * @param int $period The period to verify
-     * @return bool
-     */
-    public static function isCorrectPeriod($period)
-    {
-        return in_array($period, Reflection::getConstants(__CLASS__));
     }
 
     /**

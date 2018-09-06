@@ -17,8 +17,8 @@ use Meritoo\Common\Utilities\GeneratorUtility;
 /**
  * Test case of the base test case with common methods and data providers
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class BaseTestCaseTest extends BaseTestCase
 {
@@ -132,7 +132,7 @@ class BaseTestCaseTest extends BaseTestCase
             $directoryPath .= '/';
         }
 
-        $expectedContains = sprintf('/.data/tests/%s%s', $directoryPath, $fileName);
+        $expectedContains = sprintf('/data/tests/%s%s', $directoryPath, $fileName);
         static::assertContains($expectedContains, $path);
     }
 
@@ -168,8 +168,8 @@ class BaseTestCaseTest extends BaseTestCase
 /**
  * Simple test case
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class SimpleTestCase extends BaseTestCase
 {

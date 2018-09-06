@@ -13,6 +13,7 @@ use Generator;
 use Meritoo\Common\Collection\Collection;
 use Meritoo\Common\Exception\Reflection\CannotResolveClassNameException;
 use Meritoo\Common\Exception\Reflection\MissingChildClassesException;
+use Meritoo\Common\Exception\Reflection\NotExistingPropertyException;
 use Meritoo\Common\Exception\Reflection\TooManyChildClassesException;
 use Meritoo\Common\Test\Base\BaseTestCase;
 use Meritoo\Common\Test\Utilities\Reflection\A;
@@ -22,14 +23,16 @@ use Meritoo\Common\Test\Utilities\Reflection\D;
 use Meritoo\Common\Test\Utilities\Reflection\E;
 use Meritoo\Common\Test\Utilities\Reflection\F;
 use Meritoo\Common\Test\Utilities\Reflection\G;
+use Meritoo\Common\Test\Utilities\Reflection\H;
+use Meritoo\Common\Test\Utilities\Reflection\I;
 use Meritoo\Common\Utilities\Reflection;
 use ReflectionProperty;
 
 /**
  * Test case of the useful reflection methods
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 class ReflectionTest extends BaseTestCase
 {
@@ -379,6 +382,130 @@ class ReflectionTest extends BaseTestCase
         self::assertEquals($expected, Reflection::getPropertyValues($collection, 'gInstance.firstName', true));
     }
 
+    public function testGetMaxNumberConstantUsingClassWithoutConstants()
+    {
+        static::assertNull(Reflection::getMaxNumberConstant(A::class));
+    }
+
+    public function testGetMaxNumberConstant()
+    {
+        static::assertEquals(5, Reflection::getMaxNumberConstant(H::class));
+    }
+
+    public function testHasMethodUsingClassWithoutMethod()
+    {
+        static::assertFalse(Reflection::hasMethod(A::class, 'getUser'));
+    }
+
+    public function testHasMethod()
+    {
+        static::assertTrue(Reflection::hasMethod(A::class, 'getCount'));
+    }
+
+    public function testHasPropertyUsingClassWithoutProperty()
+    {
+        static::assertFalse(Reflection::hasProperty(A::class, 'users'));
+    }
+
+    public function testHasProperty()
+    {
+        static::assertTrue(Reflection::hasProperty(A::class, 'count'));
+    }
+
+    public function testHasConstantUsingClassWithoutConstant()
+    {
+        static::assertFalse(Reflection::hasConstant(H::class, 'users'));
+    }
+
+    public function testHasConstant()
+    {
+        static::assertTrue(Reflection::hasConstant(H::class, 'LOREM'));
+    }
+
+    public function testGetConstantValueUsingClassWithoutConstant()
+    {
+        static::assertNull(Reflection::getConstantValue(H::class, 'users'));
+    }
+
+    public function testGetConstantValue()
+    {
+        static::assertEquals(H::LOREM, Reflection::getConstantValue(H::class, 'LOREM'));
+    }
+
+    public function testIsInterfaceImplementedUsingClassWithoutInterface()
+    {
+        static::assertFalse(Reflection::isInterfaceImplemented(A::class, I::class));
+    }
+
+    public function testIsInterfaceImplemented()
+    {
+        static::assertTrue(Reflection::isInterfaceImplemented(B::class, I::class));
+    }
+
+    public function testIsChildOfClassUsingClassWithoutChildClass()
+    {
+        static::assertFalse(Reflection::isChildOfClass(A::class, B::class));
+    }
+
+    public function testIsChildOfClass()
+    {
+        static::assertTrue(Reflection::isChildOfClass(B::class, A::class));
+    }
+
+    public function testGetPropertyUsingClassWithoutProperty()
+    {
+        static::assertNull(Reflection::getProperty(A::class, 'lorem'));
+    }
+
+    public function testGetPropertyUsingClassWithPrivateProperty()
+    {
+        $property = Reflection::getProperty(A::class, 'count', ReflectionProperty::IS_PRIVATE);
+
+        static::assertInstanceOf(ReflectionProperty::class, $property);
+        static::assertTrue($property->isPrivate());
+        static::assertEquals('count', $property->getName());
+    }
+
+    public function testGetPropertyUsingClassWithProtectedProperty()
+    {
+        $property = Reflection::getProperty(B::class, 'name', ReflectionProperty::IS_PROTECTED);
+
+        static::assertInstanceOf(ReflectionProperty::class, $property);
+        static::assertTrue($property->isProtected());
+        static::assertEquals('name', $property->getName());
+    }
+
+    /**
+     * @param mixed  $object   Object that should contains given property
+     * @param string $property Name of the property
+     *
+     * @dataProvider provideObjectAndNotExistingProperty
+     */
+    public function testSetPropertyValueUsingNotExistingProperty($object, $property)
+    {
+        $this->setExpectedException(NotExistingPropertyException::class);
+
+        $object = new \stdClass();
+        Reflection::setPropertyValue($object, 'test', 'test test test');
+    }
+
+    /**
+     * @param mixed  $object   Object that should contains given property
+     * @param string $property Name of the property
+     * @param mixed  $value    Value of the property
+     *
+     * @dataProvider provideObjectPropertyAndValue
+     */
+    public function testSetPropertyValue($object, $property, $value)
+    {
+        $oldValue = Reflection::getPropertyValue($object, $property);
+        Reflection::setPropertyValue($object, $property, $value);
+        $newValue = Reflection::getPropertyValue($object, $property);
+
+        static::assertNotSame($oldValue, $value);
+        static::assertSame($newValue, $value);
+    }
+
     /**
      * Provides invalid class and trait
      *
@@ -404,6 +531,61 @@ class ReflectionTest extends BaseTestCase
         yield[
             [],
             [],
+        ];
+    }
+
+    /**
+     * Provides object and name of not existing property
+     *
+     * @return Generator
+     */
+    public function provideObjectAndNotExistingProperty()
+    {
+        yield[
+            new \stdClass(),
+            'test',
+        ];
+
+        yield[
+            new A(),
+            'test',
+        ];
+
+        yield[
+            new B(),
+            'firstName',
+        ];
+    }
+
+    /**
+     * Provides object, name of property and value of the property
+     *
+     * @return Generator
+     */
+    public function provideObjectPropertyAndValue()
+    {
+        yield[
+            new A(),
+            'count',
+            123,
+        ];
+
+        yield[
+            new B(),
+            'name',
+            'test test',
+        ];
+
+        yield[
+            new G(),
+            'firstName',
+            'Jane',
+        ];
+
+        yield[
+            new G(),
+            'lastName',
+            'Smith',
         ];
     }
 }

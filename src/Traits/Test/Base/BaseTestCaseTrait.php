@@ -14,14 +14,16 @@ use Meritoo\Common\Exception\Type\UnknownOopVisibilityTypeException;
 use Meritoo\Common\Type\OopVisibilityType;
 use Meritoo\Common\Utilities\Miscellaneous;
 use ReflectionClass;
+use ReflectionException;
 use ReflectionMethod;
+use stdClass;
 
 /**
  * BaseTestCaseTrait
  * Created on 2017-11-02
  *
- * @author    Krzysztof Niziol <krzysztof.niziol@meritoo.pl>
- * @copyright Meritoo.pl
+ * @author    Meritoo <github@meritoo.pl>
+ * @copyright Meritoo <http://www.meritoo.pl>
  */
 trait BaseTestCaseTrait
 {
@@ -30,7 +32,7 @@ trait BaseTestCaseTrait
      *
      * @var string
      */
-    private static $testsDataDirPath = '.data/tests';
+    private static $testsDataDirPath = 'data/tests';
 
     /**
      * Provides an empty value
@@ -45,6 +47,20 @@ trait BaseTestCaseTrait
         yield[0];
         yield[false];
         yield[[]];
+    }
+
+    /**
+     * Provides an empty scalar value
+     *
+     * @return Generator
+     */
+    public function provideEmptyScalarValue()
+    {
+        yield[''];
+        yield['   '];
+        yield[null];
+        yield[0];
+        yield[false];
     }
 
     /**
@@ -104,8 +120,28 @@ trait BaseTestCaseTrait
     }
 
     /**
+     * Provides non scalar value, e.g. [] or null
+     *
+     * @return Generator
+     */
+    public function provideNonScalarValue()
+    {
+        yield[
+            [],
+        ];
+
+        yield[
+            null,
+        ];
+
+        yield[
+            new stdClass(),
+        ];
+    }
+
+    /**
      * Returns path of file used by tests.
-     * It should be placed in /.data/tests directory of this project.
+     * It should be placed in /data/tests directory of this project.
      *
      * @param string $fileName      Name of file
      * @param string $directoryPath (optional) Path of directory containing the file
@@ -137,6 +173,7 @@ trait BaseTestCaseTrait
      * @param int                     $requiredArgumentsCount (optional) Expected count/amount of required arguments
      *                                                        of the verified method
      * @throws UnknownOopVisibilityTypeException
+     * @throws ReflectionException
      *
      * Attention. 2nd argument, the $method, may be:
      * - string - name of the method
@@ -193,6 +230,7 @@ trait BaseTestCaseTrait
      * @param int    $argumentsCount         (optional) Expected count/amount of arguments of the verified method
      * @param int    $requiredArgumentsCount (optional) Expected count/amount of required arguments of the verified
      *                                       method
+     * @throws ReflectionException
      * @throws UnknownOopVisibilityTypeException
      */
     protected static function assertConstructorVisibilityAndArguments(
@@ -214,6 +252,7 @@ trait BaseTestCaseTrait
      * Asserts that class with given namespace has no constructor
      *
      * @param string $classNamespace Namespace of class that contains constructor to verify
+     * @throws ReflectionException
      */
     protected static function assertHasNoConstructor($classNamespace)
     {
