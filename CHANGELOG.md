@@ -2,6 +2,25 @@
 
 Common and useful classes, methods, exceptions etc.
 
+# 0.1.5
+
+1. Tests > Date > one more test case
+2. Phing > update configuration
+3. Miscellaneous > variableDump() method > remove, because unnecessary
+4. Regex > createSlug() method > returns slug for given value
+5. Arrays > getNonEmptyValues() method > returns non-empty values, e.g. without "" (empty string), null or []
+6. Arrays > getNonEmptyValuesAsString() method > returns non-empty values concatenated by given separator
+7. ValueObject > Company > represents a company
+8. ValueObject > BankAccount > represents bank account
+9. ValueObject > Address > represents address of company, institution, user etc.
+
+# 0.1.4
+
+1. Phing > update configuration
+2. Utilities > Date > update descriptions of methods
+3. Docker > docker-compose.yml > add "phpunit" service > used to run PHPUnit's tests
+4. Reflection > setPropertiesValues() method > sets values of properties in given object
+
 # 0.1.3
 
 1. Tests > refactoring & minor improvements

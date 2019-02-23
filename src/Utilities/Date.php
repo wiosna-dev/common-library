@@ -64,8 +64,7 @@ class Date
     const DATE_DIFFERENCE_UNIT_YEARS = 'years';
 
     /**
-     * Returns start and end date for given period.
-     * The dates are returned in an array with indexes 'start' and 'end'.
+     * Returns date's period (that contains start and end date) for given period
      *
      * @param int $period The period, type of period. One of DatePeriod class constants, e.g. DatePeriod::LAST_WEEK.
      * @throws Exception
@@ -141,7 +140,12 @@ class Date
                 $dateStart = new DateTime();
                 $dateEnd = new DateTime();
 
-                if (DatePeriod::LAST_YEAR === $period || DatePeriod::NEXT_YEAR === $period) {
+                $yearPeriod = [
+                    DatePeriod::LAST_YEAR,
+                    DatePeriod::NEXT_YEAR,
+                ];
+
+                if (in_array($period, $yearPeriod, true)) {
                     $yearDifference = 1;
 
                     if (DatePeriod::LAST_YEAR === $period) {
@@ -168,7 +172,7 @@ class Date
             return null;
         }
 
-        $dateStart->setTime(0, 0, 0);
+        $dateStart->setTime(0, 0);
         $dateEnd->setTime(23, 59, 59);
 
         return new DatePeriod($dateStart, $dateEnd);
@@ -218,7 +222,8 @@ class Date
 
         return $dateTime
             ->setTime($hour, $minute, $second)
-            ->format($format);
+            ->format($format)
+            ;
     }
 
     /**
@@ -350,7 +355,7 @@ class Date
      *
      * @param string|DateTime $dateStart      The start date
      * @param string|DateTime $dateEnd        The end date
-     * @param int             $differenceUnit (optional) Unit of date difference. One of this class
+     * @param string          $differenceUnit (optional) Unit of date difference. One of this class
      *                                        DATE_DIFFERENCE_UNIT_* constants. If is set to null all units are
      *                                        returned in the array.
      * @return array|int
@@ -531,11 +536,15 @@ class Date
     /**
      * Returns random date based on given start date
      *
-     * @param DateTime $startDate        The start date. Start of the random date.
-     * @param int      $start            (optional) Start of random partition
-     * @param int      $end              (optional) End of random partition
+     * @param DateTime $startDate        (optional) Beginning of the random date. If not provided, current date will
+     *                                   be used (default behaviour).
+     * @param int      $start            (optional) Start of random partition. If not provided, 1 will be used
+     *                                   (default behaviour).
+     * @param int      $end              (optional) End of random partition. If not provided, 100 will be used
+     *                                   (default behaviour).
      * @param string   $intervalTemplate (optional) Template used to build date interval. The placeholder is replaced
-     *                                   with next, iterated value.
+     *                                   with next, iterated value. If not provided, "P%sD" will be used (default
+     *                                   behaviour).
      * @throws Exception
      * @return DateTime
      */
@@ -569,10 +578,11 @@ class Date
      * @param mixed  $value                The value which maybe is a date
      * @param bool   $allowCompoundFormats (optional) If is set to true, the compound formats used to create an
      *                                     instance of DateTime class are allowed (e.g. "now", "last day of next
-     *                                     month", "yyyy"). Otherwise - not and every incorrect value is refused.
+     *                                     month", "yyyy"). Otherwise - not and every incorrect value is refused
+     *                                     (default behaviour).
      * @param string $dateFormat           (optional) Format of date used to verify if given value is actually a date.
      *                                     It should be format matched to the given value, e.g. "Y-m-d H:i" for
-     *                                     "2015-01-01 10:00" value.
+     *                                     "2015-01-01 10:00" value. Default: "Y-m-d".
      * @return DateTime|bool
      */
     public static function getDateTime($value, $allowCompoundFormats = false, $dateFormat = 'Y-m-d')

@@ -12,7 +12,6 @@ use Generator;
 use Meritoo\Common\Exception\Regex\IncorrectColorHexLengthException;
 use Meritoo\Common\Exception\Regex\InvalidColorHexValueException;
 use Meritoo\Common\Test\Base\BaseTestCase;
-use ReflectionException;
 
 /**
  * Test case of the useful regular expressions methods
@@ -25,9 +24,6 @@ class RegexTest extends BaseTestCase
     private $simpleText;
     private $camelCaseText;
 
-    /**
-     * @throws ReflectionException
-     */
     public function testConstructor()
     {
         static::assertHasNoConstructor(Regex::class);
@@ -553,10 +549,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param mixed $nonScalarValue Non scalar value, e.g. [] or null
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideNonScalarValue
      */
     public function testGetValidColorHexValueUsingNonScalarValue($nonScalarValue)
@@ -566,10 +558,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param mixed $emptyValue Empty value, e.g. ""
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColorEmptyValue
      */
     public function testGetValidColorHexValueUsingEmptyValueWithoutException($emptyValue)
@@ -579,10 +567,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param mixed $emptyValue Empty value, e.g. ""
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColorEmptyValue
      */
     public function testGetValidColorHexValueUsingEmptyValue($emptyValue)
@@ -593,10 +577,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param string $incorrectColor Incorrect value of color
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColorIncorrectLength
      */
     public function testGetValidColorHexValueUsingIncorrectValueWithoutException($incorrectColor)
@@ -606,10 +586,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param string $incorrectColor Incorrect value of color
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColorIncorrectLength
      */
     public function testGetValidColorHexValueUsingIncorrectValue($incorrectColor)
@@ -620,10 +596,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param string $invalidColor Invalid value of color
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColorInvalidValue
      */
     public function testGetValidColorHexValueUsingInvalidValueWithoutException($invalidColor)
@@ -633,10 +605,6 @@ class RegexTest extends BaseTestCase
 
     /**
      * @param string $invalidColor Invalid value of color
-     *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColorInvalidValue
      */
     public function testGetValidColorHexValueUsingInvalidValue($invalidColor)
@@ -649,14 +617,22 @@ class RegexTest extends BaseTestCase
      * @param string $color    Color to verify
      * @param string $expected Expected value of color
      *
-     * @throws IncorrectColorHexLengthException
-     * @throws InvalidColorHexValueException
-     *
      * @dataProvider provideColor
      */
     public function testGetValidColorHexValue($color, $expected)
     {
         self::assertEquals($expected, Regex::getValidColorHexValue($color));
+    }
+
+    /**
+     * @param string $value    Value that should be transformed to slug
+     * @param string $expected Expected slug
+     *
+     * @dataProvider provideValueSlug
+     */
+    public function testCreateSlug($value, $expected)
+    {
+        self::assertSame($expected, Regex::createSlug($value));
     }
 
     /**
@@ -834,12 +810,12 @@ class RegexTest extends BaseTestCase
         ];
 
         yield[
-            fread(fopen($file1Path, 'r'), 1),
+            fread(fopen($file1Path, 'rb'), 1),
             false,
         ];
 
         yield[
-            fread(fopen($file2Path, 'r'), 1),
+            fread(fopen($file2Path, 'rb'), 1),
             true,
         ];
     }
@@ -1730,6 +1706,89 @@ class RegexTest extends BaseTestCase
     }
 
     /**
+     * Provide value to create slug
+     *
+     * @return Generator
+     */
+    public function provideValueSlug()
+    {
+        yield[
+            [],
+            false,
+        ];
+
+        yield[
+            null,
+            false,
+        ];
+
+        yield[
+            '',
+            '',
+        ];
+
+        yield[
+            1234,
+            '1234',
+        ];
+
+        yield[
+            '1234',
+            '1234',
+        ];
+
+        yield[
+            '1/2/3/4',
+            '1234',
+        ];
+
+        yield[
+            '1 / 2 / 3 / 4',
+            '1-2-3-4',
+        ];
+
+        yield[
+            'test',
+            'test',
+        ];
+
+        yield[
+            'test test',
+            'test-test',
+        ];
+
+        yield[
+            'lorem ipsum dolor sit',
+            'lorem-ipsum-dolor-sit',
+        ];
+
+        yield[
+            'Lorem ipsum. Dolor sit 12.34 amet.',
+            'lorem-ipsum-dolor-sit-1234-amet',
+        ];
+
+        yield[
+            'Was sind Löwen, Bären, Vögel und Käfer (für die Prüfung)?',
+            'was-sind-lowen-baren-vogel-und-kafer-fur-die-prufung',
+        ];
+
+        yield[
+            'äöü (ÄÖÜ)',
+            'aou-aou',
+        ];
+
+        yield[
+            'Półka dębowa. Kolor: żółędziowy. Wymiary: 80 x 30 cm.',
+            'polka-debowa-kolor-zoledziowy-wymiary-80-x-30-cm',
+        ];
+
+        yield[
+            'ąęółńśżźć (ĄĘÓŁŃŚŻŹĆ)',
+            'aeolnszzc-aeolnszzc',
+        ];
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function setUp()
@@ -1737,7 +1796,8 @@ class RegexTest extends BaseTestCase
         parent::setUp();
 
         $this->simpleText = 'lorem ipsum dolor sit';
-        $this->camelCaseText = str_replace(' ', '', lcfirst(ucwords($this->simpleText))); // 'loremIpsumDolorSit'
+        $simpleUppercase = ucwords($this->simpleText);
+        $this->camelCaseText = str_replace(' ', '', lcfirst($simpleUppercase)); // 'loremIpsumDolorSit'
     }
 
     /**
@@ -1746,8 +1806,6 @@ class RegexTest extends BaseTestCase
     protected function tearDown()
     {
         parent::tearDown();
-
-        unset($this->simpleText);
-        unset($this->camelCaseText);
+        unset($this->simpleText, $this->camelCaseText);
     }
 }
