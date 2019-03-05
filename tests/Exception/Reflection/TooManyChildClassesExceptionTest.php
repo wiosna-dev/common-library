@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Reflection;
+namespace Meritoo\Test\Common\Exception\Reflection;
 
 use Generator;
 use Meritoo\Common\Exception\Reflection\TooManyChildClassesException;
@@ -37,7 +37,7 @@ class TooManyChildClassesExceptionTest extends BaseTestCase
     public function testConstructorMessage($parentClass, array $childClasses, $expectedMessage)
     {
         $exception = TooManyChildClassesException::create($parentClass, $childClasses);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

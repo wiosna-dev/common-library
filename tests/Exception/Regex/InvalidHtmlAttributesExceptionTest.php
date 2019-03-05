@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Regex;
+namespace Meritoo\Test\Common\Exception\Regex;
 
 use Generator;
 use Meritoo\Common\Exception\Regex\InvalidHtmlAttributesException;
@@ -35,7 +35,7 @@ class InvalidHtmlAttributesExceptionTest extends BaseTestCase
     public function testConstructorMessage($htmlAttributes, $expectedMessage)
     {
         $exception = InvalidHtmlAttributesException::create($htmlAttributes);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

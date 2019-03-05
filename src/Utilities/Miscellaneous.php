@@ -425,6 +425,14 @@ class Miscellaneous
      */
     public static function replace($subject, $search, $replacement, $quoteStrings = false)
     {
+        /*
+         * Unknown source or item to find or replacement is an empty array?
+         * Nothing to do
+         */
+        if (empty($subject) || empty($search) || [] === $replacement) {
+            return $subject;
+        }
+
         $effect = $subject;
 
         $searchIsString = is_string($search);
@@ -444,37 +452,47 @@ class Miscellaneous
         $bothAreStrings = $searchIsString && $replacementIsString;
         $bothAreArrays = $searchIsArray && $replacementIsArray;
 
-        /*
-         * First step: replace strings, simple operation with strings
-         */
-        if ($searchIsString && $replacementIsString) {
-            if ($quoteStrings) {
+        if ($quoteStrings) {
+            if ($replacementIsString) {
                 $replacement = '\'' . $replacement . '\'';
-            }
+            } elseif ($replacementIsArray) {
+                foreach ($replacement as &$item) {
+                    if (is_string($item)) {
+                        $item = '\'' . $item . '\'';
+                    }
+                }
 
+                unset($item);
+            }
+        }
+
+        /*
+         * 1st step: replace strings, simple operation with strings
+         */
+        if ($bothAreStrings) {
             $effect = str_replace($search, $replacement, $subject);
         }
 
         /*
-         * Second step: replace with regular expressions.
+         * 2nd step: replace with regular expressions.
          * Attention. Searched and replacement value should be the same type: strings or arrays.
          */
         if ($effect === $subject && ($bothAreStrings || $bothAreArrays)) {
-            if ($quoteStrings && $replacementIsString) {
-                $replacement = '\'' . $replacement . '\'';
-            }
-
             /*
              * I have to avoid string that contains spaces only, e.g. "  ".
              * It's required to avoid bug: preg_replace(): Empty regular expression.
              */
             if ($searchIsArray || ($searchIsString && !empty(trim($search)))) {
-                $effect = preg_replace($search, $replacement, $subject);
+                $replaced = @preg_replace($search, $replacement, $subject);
+
+                if (null !== $replaced && [] !== $replaced) {
+                    $effect = $replaced;
+                }
             }
         }
 
         /*
-         * Third step: complex replace of the replacement defined as an array.
+         * 3rd step: complex replace of the replacement defined as an array.
          * It may be useful when you want to search for a one string and replace the string with multiple values.
          */
         if ($effect === $subject && $searchIsString && $replacementIsArray) {
@@ -499,16 +517,6 @@ class Miscellaneous
 
                 $exploded = explode($search, $subSubject);
                 $explodedCount = count($exploded);
-
-                if ($quoteStrings) {
-                    foreach ($replacement as &$item) {
-                        if (is_string($item)) {
-                            $item = '\'' . $item . '\'';
-                        }
-                    }
-
-                    unset($item);
-                }
 
                 foreach ($exploded as $key => $item) {
                     $subEffect .= $item;

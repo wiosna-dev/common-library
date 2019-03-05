@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Utilities\Arrays;
+namespace Meritoo\Test\Common\Utilities\Arrays;
 
 /**
  * Simple class convertible to string.
@@ -35,7 +35,9 @@ class SimpleToString
     }
 
     /**
-     * {@inheritdoc}
+     * Returns representation of object as string
+     *
+     * @return string
      */
     public function __toString()
     {

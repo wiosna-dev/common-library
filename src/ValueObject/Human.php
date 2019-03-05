@@ -6,15 +6,17 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Test\Common\Utilities\Reflection;
+namespace Meritoo\Common\ValueObject;
+
+use Meritoo\Common\Traits\ValueObject\HumanTrait;
 
 /**
- * The H interface.
- * Used for testing the Reflection class.
+ * Human
  *
  * @author    Meritoo <github@meritoo.pl>
  * @copyright Meritoo <http://www.meritoo.pl>
  */
-interface I
+class Human
 {
+    use HumanTrait;
 }

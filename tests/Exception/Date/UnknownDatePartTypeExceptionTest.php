@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Date;
+namespace Meritoo\Test\Common\Exception\Date;
 
 use Generator;
 use Meritoo\Common\Exception\Type\UnknownDatePartTypeException;
@@ -37,7 +37,7 @@ class UnknownDatePartTypeExceptionTest extends BaseTestCase
     public function testMessage($unknownDatePart, $value, $expectedMessage)
     {
         $exception = UnknownDatePartTypeException::createException($unknownDatePart, $value);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Regex;
+namespace Meritoo\Test\Common\Exception\Regex;
 
 use Generator;
 use Meritoo\Common\Exception\Regex\IncorrectColorHexLengthException;
@@ -35,7 +35,7 @@ class IncorrectColorHexLengthExceptionTest extends BaseTestCase
     public function testConstructorMessage($color, $expectedMessage)
     {
         $exception = IncorrectColorHexLengthException::create($color);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\File;
+namespace Meritoo\Test\Common\Exception\File;
 
 use Generator;
 use Meritoo\Common\Exception\File\EmptyFileException;
@@ -35,7 +35,7 @@ class EmptyFileExceptionTest extends BaseTestCase
     public function testMessage($emptyFilePath, $expectedMessage)
     {
         $exception = EmptyFileException::create($emptyFilePath);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

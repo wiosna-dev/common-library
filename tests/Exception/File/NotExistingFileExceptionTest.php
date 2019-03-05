@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\File;
+namespace Meritoo\Test\Common\Exception\File;
 
 use Generator;
 use Meritoo\Common\Exception\File\NotExistingFileException;
@@ -35,7 +35,7 @@ class NotExistingFileExceptionTest extends BaseTestCase
     public function testConstructorMessage($notExistingFilePath, $expectedMessage)
     {
         $exception = NotExistingFileException::create($notExistingFilePath);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

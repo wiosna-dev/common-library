@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\File;
+namespace Meritoo\Test\Common\Exception\File;
 
 use Meritoo\Common\Exception\File\EmptyFilePathException;
 use Meritoo\Common\Test\Base\BaseTestCase;
@@ -28,6 +28,6 @@ class EmptyFilePathExceptionTest extends BaseTestCase
     public function testConstructorMessage()
     {
         $exception = EmptyFilePathException::create();
-        static::assertEquals('Path of the file is empty. Did you provide path of proper file?', $exception->getMessage());
+        static::assertSame('Path of the file is empty. Did you provide path of proper file?', $exception->getMessage());
     }
 }

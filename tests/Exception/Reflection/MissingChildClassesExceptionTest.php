@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Reflection;
+namespace Meritoo\Test\Common\Exception\Reflection;
 
 use Generator;
 use Meritoo\Common\Exception\Reflection\MissingChildClassesException;
@@ -36,7 +36,7 @@ class MissingChildClassesExceptionTest extends BaseTestCase
     public function testConstructorMessage($parentClass, $expectedMessage)
     {
         $exception = MissingChildClassesException::create($parentClass);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

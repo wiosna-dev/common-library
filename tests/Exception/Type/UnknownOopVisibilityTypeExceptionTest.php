@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Type;
+namespace Meritoo\Test\Common\Exception\Type;
 
 use Generator;
 use Meritoo\Common\Exception\Type\UnknownOopVisibilityTypeException;
@@ -36,7 +36,7 @@ class UnknownOopVisibilityTypeExceptionTest extends BaseTestCase
     public function testConstructorMessage($unknownType, $expectedMessage)
     {
         $exception = UnknownOopVisibilityTypeException::createException($unknownType);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**

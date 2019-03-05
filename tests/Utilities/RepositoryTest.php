@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Utilities;
+namespace Meritoo\Test\Common\Utilities;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\EntityRepository;
@@ -14,8 +14,8 @@ use Doctrine\ORM\Query\Expr\OrderBy;
 use Doctrine\ORM\QueryBuilder;
 use Generator;
 use Meritoo\Common\Test\Base\BaseTestCase;
-use Meritoo\Common\Test\Utilities\Repository\Sortable;
 use Meritoo\Common\Utilities\Repository;
+use Meritoo\Test\Common\Utilities\Repository\Sortable;
 use stdClass;
 
 /**
@@ -36,7 +36,7 @@ class RepositoryTest extends BaseTestCase
         $items = [];
         Repository::replenishPositions($items);
 
-        static::assertEquals([], $items);
+        static::assertSame([], $items);
     }
 
     public function testReplenishPositionsUsingNotSortableObjects()
@@ -85,10 +85,10 @@ class RepositoryTest extends BaseTestCase
     public function testReplenishPositionsUsingArraysWithoutExtremePosition(array $items)
     {
         Repository::replenishPositions($items);
-        static::assertEquals($items, $items);
+        static::assertSame($items, $items);
 
         Repository::replenishPositions($items, false);
-        static::assertEquals($items, $items);
+        static::assertSame($items, $items);
     }
 
     /**
@@ -101,7 +101,7 @@ class RepositoryTest extends BaseTestCase
     public function testReplenishPositionsUsingArraysWithoutExtremePositionForce(array $items, $asLast, array $expected)
     {
         Repository::replenishPositions($items, $asLast, true);
-        static::assertEquals($expected, $items);
+        static::assertSame($expected, $items);
     }
 
     /**
@@ -114,7 +114,7 @@ class RepositoryTest extends BaseTestCase
     public function testReplenishPositionsUsingArraysWithExtremePositionForce(array $items, $asLast, array $expected)
     {
         Repository::replenishPositions($items, $asLast, true);
-        static::assertEquals($expected, $items);
+        static::assertSame($expected, $items);
     }
 
     /**
@@ -124,10 +124,10 @@ class RepositoryTest extends BaseTestCase
     public function testReplenishPositionsUsingObjectsWithoutExtremePosition(array $items)
     {
         Repository::replenishPositions($items);
-        static::assertEquals($items, $items);
+        static::assertSame($items, $items);
 
         Repository::replenishPositions($items, false);
-        static::assertEquals($items, $items);
+        static::assertSame($items, $items);
     }
 
     /**
@@ -171,7 +171,7 @@ class RepositoryTest extends BaseTestCase
      */
     public function testGetExtremePositionUsingArraysWithoutExtremePosition(array $items, $max, $expected)
     {
-        static::assertEquals($expected, Repository::getExtremePosition($items, $max));
+        static::assertSame($expected, Repository::getExtremePosition($items, $max));
     }
 
     /**
@@ -183,7 +183,7 @@ class RepositoryTest extends BaseTestCase
      */
     public function testGetExtremePositionUsingArraysWithExtremePosition(array $items, $max, $expected)
     {
-        static::assertEquals($expected, Repository::getExtremePosition($items, $max));
+        static::assertSame($expected, Repository::getExtremePosition($items, $max));
     }
 
     /**
@@ -195,7 +195,7 @@ class RepositoryTest extends BaseTestCase
      */
     public function testGetExtremePositionUsingObjectsWithoutExtremePosition(array $items, $max, $expected)
     {
-        static::assertEquals($expected, Repository::getExtremePosition($items, $max));
+        static::assertSame($expected, Repository::getExtremePosition($items, $max));
     }
 
     /**
@@ -207,7 +207,7 @@ class RepositoryTest extends BaseTestCase
      */
     public function testGetExtremePositionUsingObjectsWithExtremePosition(array $items, $max, $expected)
     {
-        static::assertEquals($expected, Repository::getExtremePosition($items, $max));
+        static::assertSame($expected, Repository::getExtremePosition($items, $max));
     }
 
     public function testGetEntityOrderedQueryBuilderUsingDefaults()
@@ -220,7 +220,8 @@ class RepositoryTest extends BaseTestCase
             ->setMethods([
                 'createQueryBuilder',
             ])
-            ->getMock();
+            ->getMock()
+        ;
 
         $expectedQueryBuilder = new QueryBuilder($entityManager);
         $expectedQueryBuilder->from('any_table_name', 'qb');
@@ -228,7 +229,8 @@ class RepositoryTest extends BaseTestCase
         $entityRepository
             ->expects(static::once())
             ->method('createQueryBuilder')
-            ->willReturn($expectedQueryBuilder);
+            ->willReturn($expectedQueryBuilder)
+        ;
 
         $queryBuilder = Repository::getEntityOrderedQueryBuilder($entityRepository);
         $selectDQLPart = $queryBuilder->getDQLPart('select');
@@ -262,7 +264,8 @@ class RepositoryTest extends BaseTestCase
             ->setMethods([
                 'createQueryBuilder',
             ])
-            ->getMock();
+            ->getMock()
+        ;
 
         $expectedQueryBuilder = new QueryBuilder($entityManager);
         $expectedQueryBuilder->from('any_table_name', 'qb');
@@ -270,7 +273,8 @@ class RepositoryTest extends BaseTestCase
         $entityRepository
             ->expects(static::once())
             ->method('createQueryBuilder')
-            ->willReturn($expectedQueryBuilder);
+            ->willReturn($expectedQueryBuilder)
+        ;
 
         $queryBuilder = Repository::getEntityOrderedQueryBuilder($entityRepository, $property, $direction);
         $selectDQLPart = $queryBuilder->getDQLPart('select');

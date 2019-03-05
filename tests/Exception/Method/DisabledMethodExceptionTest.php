@@ -6,7 +6,7 @@
  * file that was distributed with this source code.
  */
 
-namespace Meritoo\Common\Test\Exception\Method;
+namespace Meritoo\Test\Common\Exception\Method;
 
 use Generator;
 use Meritoo\Common\Exception\Method\DisabledMethodException;
@@ -37,7 +37,7 @@ class DisabledMethodExceptionTest extends BaseTestCase
     public function testConstructorMessage($disabledMethod, $alternativeMethod, $expectedMessage)
     {
         $exception = DisabledMethodException::create($disabledMethod, $alternativeMethod);
-        static::assertEquals($expectedMessage, $exception->getMessage());
+        static::assertSame($expectedMessage, $exception->getMessage());
     }
 
     /**
